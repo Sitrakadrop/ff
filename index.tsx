@@ -176,13 +176,6 @@ const CATEGORY_NAMES: Record<
    CATEGORY ICONS
    ========================================================= */
 
-/**
- * Chaque catégorie possède maintenant sa propre icône.
- *
- * L'icône ne dépend plus de category.icon provenant de
- * Supabase. Cela évite le problème où toutes les catégories
- * affichent la même icône.
- */
 const CATEGORY_ICONS: Record<
   string,
   LucideIcon
@@ -613,7 +606,6 @@ function CategoryTile({
     >
       <div className="flex items-start gap-3">
 
-        {/* CATEGORY ICON */}
         <span
           className={[
             "category-icon",
@@ -635,7 +627,6 @@ function CategoryTile({
           />
         </span>
 
-        {/* CATEGORY TEXT */}
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold">
             {category.name}
@@ -1047,89 +1038,158 @@ function HomePage() {
           HERO
           =================================================== */}
 
-<section
-  className="hero-gradient hero-depth relative mx-auto aspect-video w-full max-w-[980px] overflow-hidden rounded-2xl border border-border"
->
-  {/* Background glow */}
-  <div className="pointer-events-none absolute inset-0 overflow-hidden">
-    <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
+      <section
+        className="
+          hero-gradient
+          hero-depth
+          relative
+          mx-auto
+          min-h-[250px]
+          w-full
+          max-w-[1100px]
+          overflow-hidden
+          rounded-2xl
+          border
+          border-border
+          md:min-h-[270px]
+        "
+      >
 
-    <div className="absolute -bottom-40 right-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-  </div>
+        {/* Background glow */}
 
-  {/* VIDEO 16:9 — aucune partie coupée */}
-  <video
-    src={HERO_VIDEO_SRC}
-    autoPlay
-    loop
-    muted
-    playsInline
-    preload="metadata"
-    aria-label="Smart Point premium PowerPoint templates preview"
-    className="hero-visual pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-95"
-  />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
 
-  {/* Overlay */}
-  <div className="hero-overlay pointer-events-none absolute inset-0 hidden md:block" />
-
-  {/* CONTENU */}
-  <div className="relative z-10 flex h-full items-center p-5 sm:p-7 lg:p-9">
-    <div className="relative z-10 max-w-xl">
-      {/* Premium label */}
-      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-        <Sparkles className="h-3.5 w-3.5" />
-        Premium PowerPoint Library
-      </div>
-
-      {/* Title */}
-      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[42px] lg:leading-[1.05]">
-        Create presentations
-        <span className="block text-primary">
-          that stand out.
-        </span>
-      </h1>
-
-      {/* Description */}
-      <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-        Explore professional PowerPoint templates designed for business,
-        startups, data, technology and more.
-      </p>
-
-      {/* Stats */}
-      <div className="mt-5 flex flex-wrap gap-2.5">
-        <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
-          <span className="block text-base font-bold">
-            {totalTemplates}
-          </span>
-
-          <span className="text-xs text-muted-foreground">
-            Templates
-          </span>
+          <div className="absolute -bottom-40 right-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
         </div>
 
-        <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
-          <span className="block text-base font-bold">
-            {orderedCategories.length}
-          </span>
 
-          <span className="text-xs text-muted-foreground">
-            Categories
-          </span>
+        {/* HERO CONTENT + VIDEO */}
+
+        <div className="relative z-10 grid h-full min-h-[250px] grid-cols-1 md:min-h-[270px] md:grid-cols-[42%_58%]">
+
+          {/* =================================================
+              TEXT SIDE
+              ================================================= */}
+
+          <div className="relative z-20 flex items-center p-5 sm:p-7 lg:p-8">
+
+            <div className="max-w-xl">
+
+              {/* Premium label */}
+
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+
+                Premium PowerPoint Library
+              </div>
+
+
+              {/* Title */}
+
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[42px] lg:leading-[1.05]">
+
+                Create presentations
+
+                <span className="block text-primary">
+                  that stand out.
+                </span>
+
+              </h1>
+
+
+              {/* Description */}
+
+              <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
+                Explore professional PowerPoint templates designed for business,
+                startups, data, technology and more.
+              </p>
+
+
+              {/* Stats */}
+
+              <div className="mt-5 flex flex-wrap gap-2.5">
+
+                <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
+
+                  <span className="block text-base font-bold">
+                    {totalTemplates}
+                  </span>
+
+                  <span className="text-xs text-muted-foreground">
+                    Templates
+                  </span>
+
+                </div>
+
+
+                <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
+
+                  <span className="block text-base font-bold">
+                    {orderedCategories.length}
+                  </span>
+
+                  <span className="text-xs text-muted-foreground">
+                    Categories
+                  </span>
+
+                </div>
+
+
+                <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
+
+                  <span className="block text-base font-bold">
+                    PDF + PPTX
+                  </span>
+
+                  <span className="text-xs text-muted-foreground">
+                    Formats
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* =================================================
+              VIDEO SIDE
+              ================================================= */}
+
+          <div className="relative hidden min-h-[250px] overflow-hidden md:block">
+
+            <video
+              src={HERO_VIDEO_SRC}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              aria-label="Smart Point premium PowerPoint templates preview"
+              className="
+                hero-visual
+                absolute
+                inset-0
+                h-full
+                w-full
+                object-cover
+                object-center
+                opacity-95
+              "
+            />
+
+            {/* Video overlay */}
+
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-background/90 via-background/20 to-transparent" />
+
+          </div>
+
         </div>
 
-        <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
-          <span className="block text-base font-bold">
-            PDF + PPTX
-          </span>
-
-          <span className="text-xs text-muted-foreground">
-            Formats
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
 
       {/* ===================================================
@@ -1580,3 +1640,4 @@ function HomePage() {
     </div>
   );
 }
+
