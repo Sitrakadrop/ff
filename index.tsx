@@ -1047,107 +1047,89 @@ function HomePage() {
           HERO
           =================================================== */}
 
-      <section className="hero-gradient hero-depth relative overflow-hidden rounded-2xl border border-border">
+<section
+  className="hero-gradient hero-depth relative mx-auto aspect-video w-full max-w-[980px] overflow-hidden rounded-2xl border border-border"
+>
+  {/* Background glow */}
+  <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
 
-        {/* Background glow */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
+    <div className="absolute -bottom-40 right-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+  </div>
 
-          <div className="absolute -bottom-40 right-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+  {/* VIDEO 16:9 — aucune partie coupée */}
+  <video
+    src={HERO_VIDEO_SRC}
+    autoPlay
+    loop
+    muted
+    playsInline
+    preload="metadata"
+    aria-label="Smart Point premium PowerPoint templates preview"
+    className="hero-visual pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-95"
+  />
+
+  {/* Overlay */}
+  <div className="hero-overlay pointer-events-none absolute inset-0 hidden md:block" />
+
+  {/* CONTENU */}
+  <div className="relative z-10 flex h-full items-center p-5 sm:p-7 lg:p-9">
+    <div className="relative z-10 max-w-xl">
+      {/* Premium label */}
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+        <Sparkles className="h-3.5 w-3.5" />
+        Premium PowerPoint Library
+      </div>
+
+      {/* Title */}
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[42px] lg:leading-[1.05]">
+        Create presentations
+        <span className="block text-primary">
+          that stand out.
+        </span>
+      </h1>
+
+      {/* Description */}
+      <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
+        Explore professional PowerPoint templates designed for business,
+        startups, data, technology and more.
+      </p>
+
+      {/* Stats */}
+      <div className="mt-5 flex flex-wrap gap-2.5">
+        <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
+          <span className="block text-base font-bold">
+            {totalTemplates}
+          </span>
+
+          <span className="text-xs text-muted-foreground">
+            Templates
+          </span>
         </div>
 
+        <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
+          <span className="block text-base font-bold">
+            {orderedCategories.length}
+          </span>
 
-        <div className="relative grid min-h-[280px] items-center gap-8 p-7 sm:p-10 lg:grid-cols-[1.05fr_.95fr] lg:p-12">
-
-          {/* -------------------------------------------------
-              HERO TEXT
-             ------------------------------------------------- */}
-
-          <div className="relative z-10 max-w-2xl">
-
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-
-              Premium PowerPoint Library
-            </div>
-
-
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
-              Create presentations
-
-              <span className="block text-primary">
-                that stand out.
-              </span>
-            </h1>
-
-
-            <p className="mt-4 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
-              Explore professional
-              PowerPoint templates
-              designed for business,
-              startups, data,
-              technology and more.
-            </p>
-
-
-            {/* HERO STATS */}
-            <div className="mt-6 flex flex-wrap gap-3">
-
-              <div className="rounded-lg border border-border bg-background/30 px-4 py-2.5 backdrop-blur-sm">
-                <span className="block text-lg font-bold">
-                  {totalTemplates}
-                </span>
-
-                <span className="text-xs text-muted-foreground">
-                  Templates
-                </span>
-              </div>
-
-
-              <div className="rounded-lg border border-border bg-background/30 px-4 py-2.5 backdrop-blur-sm">
-                <span className="block text-lg font-bold">
-                  {
-                    orderedCategories.length
-                  }
-                </span>
-
-                <span className="text-xs text-muted-foreground">
-                  Categories
-                </span>
-              </div>
-
-
-              <div className="rounded-lg border border-border bg-background/30 px-4 py-2.5 backdrop-blur-sm">
-                <span className="block text-lg font-bold">
-                  PDF + PPTX
-                </span>
-
-                <span className="text-xs text-muted-foreground">
-                  Formats
-                </span>
-              </div>
-
-            </div>
-          </div>
-
-
-          {/* -------------------------------------------------
-              HERO VIDEO — POSITION EXACTE DE L'INTERFACE ORIGINALE
-             ------------------------------------------------- */}
-
-          <video
-            src={HERO_VIDEO_SRC}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            aria-label="Smart Point premium PowerPoint templates preview"
-            className="absolute inset-y-0 right-0 hidden h-full w-[58%] object-cover object-center opacity-95 md:block"
-          />
-
+          <span className="text-xs text-muted-foreground">
+            Categories
+          </span>
         </div>
-      </section>
+
+        <div className="rounded-lg border border-border bg-background/30 px-3.5 py-2 backdrop-blur-sm">
+          <span className="block text-base font-bold">
+            PDF + PPTX
+          </span>
+
+          <span className="text-xs text-muted-foreground">
+            Formats
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 
       {/* ===================================================
@@ -1178,6 +1160,7 @@ function HomePage() {
 
           {orderedCategories.length >
             10 && (
+
             <Button
               type="button"
               variant="outline"
@@ -1189,16 +1172,20 @@ function HomePage() {
                 )
               }
             >
+
               {showAllCategories
                 ? "Show less"
                 : "View all"}
+
             </Button>
+
           )}
 
         </div>
 
 
         {/* CATEGORY LOADING */}
+
         {categories.isPending ? (
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -1290,34 +1277,44 @@ function HomePage() {
             <div className="mt-1 flex flex-wrap items-center gap-3">
 
               <h2 className="text-xl font-bold sm:text-2xl">
+
                 {activeCategory
                   ? activeCategory.name
                   : search
                     ? "Search results"
                     : "All templates"}
+
               </h2>
 
 
               {templates.data && (
+
                 <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+
                   {
                     templates.data
                       .length
                   }
+
                 </span>
+
               )}
 
             </div>
 
 
             {activeCategory && (
+
               <p className="mt-1 text-sm text-muted-foreground">
+
                 {
                   getCategoryDescription(
                     activeCategory,
                   )
                 }
+
               </p>
+
             )}
 
           </div>
@@ -1337,9 +1334,11 @@ function HomePage() {
                   clearFilters
                 }
               >
+
                 <X className="h-4 w-4" />
 
                 Clear filters
+
               </Button>
 
             )}
