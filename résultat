@@ -1,175 +1,137 @@
-C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[2860..2905]"
-*/
-var require_react_dom_server_edge_production = /* @__PURE__ */ __commonJSMin(((exports) => {
-        var React = require_react();
-        var ReactDOM = require_react_dom();
-        var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
-        var REACT_PORTAL_TYPE = Symbol.for("react.portal");
-        var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-        var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
-        var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-        var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
-        var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-        var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
-        var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
-        var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
-        var REACT_MEMO_TYPE = Symbol.for("react.memo");
-        var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-        var REACT_SCOPE_TYPE = Symbol.for("react.scope");
-        var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-        var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-        var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-        var REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition");
-        var REACT_RECOVERABLE_TYPE = Symbol.for("react.recoverable");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-        function getIteratorFn(maybeIterable) {
-                if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
-                maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
-                return "function" === typeof maybeIterable ? maybeIterable : null;
-        }
-        var REACT_OPTIMISTIC_KEY = Symbol.for("react.optimistic_key");
-        var isArrayImpl = Array.isArray;
-        function murmurhash3_32_gc(key, seed) {
-                var remainder = key.length & 3;
-                var bytes = key.length - remainder;
-                var h1 = seed;
-                for (seed = 0; seed < bytes;) {
-                        var k1 = key.charCodeAt(seed) & 255 | (key.charCodeAt(++seed) & 255) << 8 | (key.charCodeAt(++seed) & 255) << 16 | (key.charCodeAt(++seed) & 255) << 24;
-                        ++seed;
-                        k1 = 3432918353 * (k1 & 65535) + ((3432918353 * (k1 >>> 16) & 65535) << 16) & 4294967295;
-                        k1 = k1 << 15 | k1 >>> 17;
-                        k1 = 461845907 * (k1 & 65535) + ((461845907 * (k1 >>> 16) & 65535) << 16) & 4294967295;
-                        h1 ^= k1;
-                        h1 = h1 << 13 | h1 >>> 19;
-                        h1 = 5 * (h1 & 65535) + ((5 * (h1 >>> 16) & 65535) << 16) & 4294967295;
-                        h1 = (h1 & 65535) + 27492 + (((h1 >>> 16) + 58964 & 65535) << 16);
-                }
-                k1 = 0;
+C:\SMART POINT\app>bunx whop apps --help
+whop apps — Build and deploy fully-hosted web apps on Whop (*.whop.site) — Vite apps served from Cloudflare Workers
 
-C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[7335..7390]"
-* Copyright (c) Meta Platforms, Inc. and affiliates.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-var require_react_dom_server_legacy_browser_production = /* @__PURE__ */ __commonJSMin(((exports) => {
-        var React = require_react();
-        var ReactDOM = require_react_dom();
-        function formatProdErrorMessage(code) {
-                var url = "https://react.dev/errors/" + code;
-                if (1 < arguments.length) {
-                        url += "?args[]=" + encodeURIComponent(arguments[1]);
-                        for (var i = 2; i < arguments.length; i++) url += "&args[]=" + encodeURIComponent(arguments[i]);
-                }
-                return "Minified React error #" + code + "; visit " + url + " for the full message or use the non-minified dev environment for full errors and additional helpful warnings.";
-        }
-        var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element");
-        var REACT_PORTAL_TYPE = Symbol.for("react.portal");
-        var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-        var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
-        var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-        var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
-        var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-        var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
-        var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
-        var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
-        var REACT_MEMO_TYPE = Symbol.for("react.memo");
-        var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-        var REACT_SCOPE_TYPE = Symbol.for("react.scope");
-        var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-        var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-        var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-        var REACT_VIEW_TRANSITION_TYPE = Symbol.for("react.view_transition");
-        var REACT_RECOVERABLE_TYPE = Symbol.for("react.recoverable");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-        function getIteratorFn(maybeIterable) {
-                if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
-                maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
-                return "function" === typeof maybeIterable ? maybeIterable : null;
-        }
-        var REACT_OPTIMISTIC_KEY = Symbol.for("react.optimistic_key");
-        var isArrayImpl = Array.isArray;
-        function murmurhash3_32_gc(key, seed) {
-                var remainder = key.length & 3;
-                var bytes = key.length - remainder;
-                var h1 = seed;
-                for (seed = 0; seed < bytes;) {
-                        var k1 = key.charCodeAt(seed) & 255 | (key.charCodeAt(++seed) & 255) << 8 | (key.charCodeAt(++seed) & 255) << 16 | (key.charCodeAt(++seed) & 255) << 24;
-                        ++seed;
-                        k1 = 3432918353 * (k1 & 65535) + ((3432918353 * (k1 >>> 16) & 65535) << 16) & 4294967295;
-                        k1 = k1 << 15 | k1 >>> 17;
-                        k1 = 461845907 * (k1 & 65535) + ((461845907 * (k1 >>> 16) & 65535) << 16) & 4294967295;
-                        h1 ^= k1;
-                        h1 = h1 << 13 | h1 >>> 19;
-                        h1 = 5 * (h1 & 65535) + ((5 * (h1 >>> 16) & 65535) << 16) & 4294967295;
-                        h1 = (h1 & 65535) + 27492 + (((h1 >>> 16) + 58964 & 65535) << 16);
+Usage: whop apps <command>
 
-C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[15180..15255]"
-                return replaceSsrResponse(ssrResponse, Response.json({
-                        ...redirectOptions,
-                        isSerializedRedirect: true
-                }, { headers: responseHeaders }), "redirect response replaced");
-        }
-        return ssrResponse;
-}
-async function handleServerRoutes({ getRouter, request, url, executeRouter, context, executedRequestMiddlewares }) {
-        const router = await getRouter();
-        const pathname = executeRewriteInput(router.rewrite, url).pathname;
-        const [matchedRoutes, rawParams, foundRoute] = router.getMatchedRoutes(pathname);
-        const isExactMatch = foundRoute && rawParams["**"] === void 0;
-        const routeMiddlewares = [];
-        let terminalHandler = (ctx) => executeRouter(ctx.context, matchedRoutes);
-        let terminalNext;
-        for (const route of matchedRoutes) {
-                const serverMiddleware = route.options.server?.middleware;
-                if (serverMiddleware) {
-                        const flattened = flattenMiddlewares(serverMiddleware);
-                        for (const m of flattened) if (!executedRequestMiddlewares.has(m)) routeMiddlewares.push(m.options.server);
-                }
-        }
-        const server = foundRoute?.options.server;
-        if (server?.handlers && isExactMatch) {
-                const handlers = typeof server.handlers === "function" ? server.handlers({ createHandlers: (d) => d }) : server.handlers;
-                const requestMethod = request.method.toUpperCase();
-                const handler = requestMethod === "HEAD" ? handlers["HEAD"] ?? handlers["GET"] ?? handlers["ANY"] : handlers[requestMethod] ?? handlers["ANY"];
-                if (handler) {
-                        const mayDefer = !!foundRoute.options.component;
-                        if (typeof handler === "function") if (!mayDefer) {
-                                terminalHandler = handler;
-                                terminalNext = throwIfMayNotDefer;
-                        } else routeMiddlewares.push(handler);
-                        else {
-                                if (handler.middleware?.length) {
-                                        const handlerMiddlewares = flattenMiddlewares(handler.middleware);
-                                        for (const m of handlerMiddlewares) routeMiddlewares.push(m.options.server);
-                                }
-                                if (handler.handler) if (!mayDefer) {
-                                        terminalHandler = handler.handler;
-                                        terminalNext = throwIfMayNotDefer;
-                                } else routeMiddlewares.push(handler.handler);
-                        }
-                }
-        }
-        return normalizeSsrResponse(await executeMiddleware(routeMiddlewares, terminalHandler, {
-                request,
-                context,
-                params: rawParams,
-                pathname,
-                handlerType: "router"
-        }, request.signal, terminalNext));
-}
-//#endregion
-//#region node_modules/@tanstack/react-start/dist/default-entry/esm/server.js
-var fetch = createStartHandler(defaultStreamHandler);
-function createServerEntry(entry) {
-        return { async fetch(...args) {
-                return await entry.fetch(...args);
-        } };
-}
-//#endregion
-//#region \0virtual:cloudflare/worker-entry
-var worker_entry_default = createServerEntry({ fetch }) ?? {};
-//#endregion
-export { createServerEntry, worker_entry_default as default };
+Commands:
+  builds       Manage app builds (list, inspect, promote)
+  create       Create App
+  delete       Delete App
+  deploy       Build, upload and ship this app live
+  dev          Run the local dev server for this app
+  get          Retrieve App
+  init         Start a new app: register, scaffold, and link a project
+  list         List Apps
+  logs         List App Logs
+  permissions  Update App Permissions
+  pull         Fetch the app's deployed source and merge it into this directory
+  secrets      Manage app secrets — encrypted at rest, injected as env bindings into the hosted runtime and `whop apps dev`
+  update       Update App
+
+Global Options:
+  --filter-output <keys>              Filter output by key paths (e.g. foo,bar.baz,a[0,3])
+  --format <toon|json|yaml|md|jsonl>  Output format
+  --full-output                       Show full output envelope
+  --help                              Show help
+  --llms, --llms-full                 Print LLM-readable manifest
+  --schema                            Show JSON Schema for command
+  --token-count                       Print token count of output (instead of output)
+  --token-limit <n>                   Limit output to n tokens
+  --token-offset <n>                  Skip first n tokens of output
+
+C:\SMART POINT\app>bunx whop app-builds --help
+whop app-builds — Versioned build artifacts deployed to an app's platforms.
+
+Usage: whop app-builds <command>
+
+Commands:
+  create   Create App Build
+  get      Retrieve App Build
+  list     List App Builds
+  promote  Promote App Build
+
+Global Options:
+  --filter-output <keys>              Filter output by key paths (e.g. foo,bar.baz,a[0,3])
+  --format <toon|json|yaml|md|jsonl>  Output format
+  --full-output                       Show full output envelope
+  --help                              Show help
+  --llms, --llms-full                 Print LLM-readable manifest
+  --schema                            Show JSON Schema for command
+  --token-count                       Print token count of output (instead of output)
+  --token-limit <n>                   Limit output to n tokens
+  --token-offset <n>                  Skip first n tokens of output
+
+C:\SMART POINT\app>bunx whop apps deployments --help
+whop@0.18.2 — Build and manage Whop apps from your terminal.
+
+Usage: whop <command>
+
+Commands:
+  accounts                 A business on Whop: profile, wallet, capabilities, settings.
+  ad-campaigns             Platform, objective, and budget for a set of ads.
+  ad-groups                Audience, placements, and schedule within a campaign.
+  ads                      The creative: copy, assets, and destination URL.
+  api-keys                 Programmatic credentials for an account or app.
+  api-logs                 Requests made to Whop's API with your account's API keys.
+  app-builds               Versioned build artifacts deployed to an app's platforms.
+  apps                     Build and deploy fully-hosted web apps on Whop (*.whop.site) — Vite apps served from Cloudflare Workers
+  ask-question             Record an unanswered Whop question for internal review. Returns a receipt, not an answer; do not wait or poll for a reply.
+  audiences                Reusable targeting lists for ad groups.
+  auth                     Manage Whop authentication
+  bounties                 Paid tasks with reviewed submissions and escrowed rewards.
+  bounty-submissions       Work submitted to a bounty, from attempt to payout.
+  cards                    Issue cards that spend from a balance.
+  cashback-rules           Configure platform-sponsored card cashback.
+  checkout-configurations  Turn a plan into a shareable, prefilled checkout link.
+  confirmation-tokens      A short-lived reference to payment details collected from a buyer.
+  deposits                 Add funds to a balance.
+  dispute-alerts           Issuer warnings that arrive before a chargeback does.
+  disputes                 Chargebacks filed against an account, with evidence and outcomes.
+  domains                  Custom domains assigned to hosted apps.
+  economic-intelligence    What an account should do next to grow, generated from its own data.
+  events                   Conversion and engagement events tracked for attribution.
+  experiments              Feature flags and A/B experiments for gradual rollout and statistical measurement.
+  exports                  Asynchronous CSV dumps of an account's dashboard data.
+  files                    Upload files and attach them wherever Whop accepts documents.
+  ledgers                  The activity feed behind an account or user's balance.
+  login                    Log in to Whop (alias for `auth login`)
+  logout                   Log out (alias for `auth logout`)
+  media                    AI-generated assets, billed from a balance, attachable wherever files are accepted.
+  members                  One buyer's relationship with an account, across all their purchases.
+  memberships              A customer's purchase of a plan, from checkout through cancellation.
+  notifications            The user's notification feed: unread badges, mark-read, app sends, and the topic catalog.
+  partners                 Your partner profile, referral links, payout rates, and referred businesses.
+  payment-method-domains   Domains verified to show wallet payment methods like Apple Pay at checkout.
+  payment-rules            Rules an account writes to decide its own payments.
+  payments                 A charge against a buyer, and the step they still owe.
+  payouts                  Send money from a balance to a bank or wallet.
+  people                   Visitors and customers of an account, with identity, purchase, and traffic profiles.
+  permissions              What your credential is allowed to do on a resource.
+  plans                    Pricing for a product: one-time, recurring, trials, stock.
+  products                 The things you sell. Each owns plans and a store page.
+  promo-codes              Discounts that creators configure for checkout.
+  quickstart               Set up the business account the CLI should use
+  refunds                  Money returned to a buyer from a payment.
+  report-feedback          Report a concrete Whop problem, confusing behavior, or documentation gap for internal review. Returns a receipt; no follow-up is sent to this session.
+  resolution-center-cases  File or respond to a case against a payment, as the buyer or the merchant.
+  setup-intents            Saving a buyer's payment method without charging it.
+  shipments                Track the delivery of an order by its carrier tracking number.
+  social-accounts          Connected Facebook and Instagram accounts that run ads.
+  stats                    Aggregated financial, audience, and traffic reporting.
+  swaps                    Convert a balance between currencies.
+  team-members             An account's team members and the roles that scope their access.
+  transfers                Move funds between Whop accounts and users.
+  upgrade                  Update the whop CLI to the latest version
+  users                    A person on Whop: profile and connected identities.
+  verifications            Legal identity required before payouts and card issuing.
+  webhooks                 Event notifications pushed to your server as things happen.
+
+Integrations:
+  completions  Generate shell completion script
+  mcp          Register as MCP server (add, doctor)
+  skills       Sync skill files to agents (add, list)
+
+Global Options:
+  --filter-output <keys>              Filter output by key paths (e.g. foo,bar.baz,a[0,3])
+  --format <toon|json|yaml|md|jsonl>  Output format
+  --full-output                       Show full output envelope
+  --help                              Show help
+  --llms, --llms-full                 Print LLM-readable manifest
+  --mcp                               Start as MCP stdio server
+  --schema                            Show JSON Schema for command
+  --token-count                       Print token count of output (instead of output)
+  --token-limit <n>                   Limit output to n tokens
+  --token-offset <n>                  Skip first n tokens of output
+  --version                           Show version
 
 C:\SMART POINT\app>
