@@ -22,3 +22,5 @@ dist\server\index.js:15244:var worker_entry_default = createServerEntry({ fetch 
 dist\server\index.js:15246:export { createServerEntry, worker_entry_default as default };
 
 C:\SMART POINT\app>findstr /s /n /i /c:"server-entry" dist\*.js dist\*.mjs dist\*.cjs
+
+C:\SMART POINT\app>findstr /s /n /i /c:"server-entry" dist\*.js dist\*.mjs dist\*.cjsdir /s /b dist\server\*
