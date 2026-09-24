@@ -1,6 +1,9 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
 
-import { resolveWhopIdentity } from "@/lib/whop.server";
+import {
+  hasWhopProductAccess,
+  resolveWhopIdentity,
+} from "@/lib/whop.server";
 
 type FileType = "pdf" | "pptx";
 
@@ -13,17 +16,17 @@ type TemplateRow = {
 };
 
 const SUPABASE_URL =
-  process.env.SUPABASE_URL ??
+  process.env["SUPABASE_URL"] ??
   "https://eejgfehjeqdwribhgfjm.supabase.co";
 
 const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env["SUPABASE_SERVICE_ROLE_KEY"];
 
 const GOOGLE_CLIENT_EMAIL =
-  process.env.GOOGLE_CLIENT_EMAIL;
+  process.env["GOOGLE_CLIENT_EMAIL"];
 
 const GOOGLE_PRIVATE_KEY =
-  process.env.GOOGLE_PRIVATE_KEY?.replace(
+  process.env["GOOGLE_PRIVATE_KEY"]?.replace(
     /\\n/g,
     "\n",
   );
@@ -358,10 +361,15 @@ function buildFilename(
 
 export const Route =
   createFileRoute("/api/download")({
+    // TanStack Start 1.168.56 exposes server handlers at runtime,
+    // but the installed route typings do not expose the server property.
+    // @ts-expect-error
     server: {
       handlers: {
         GET: async ({
           request,
+        }: {
+          request: Request;
         }) => {
           try {
             /*
@@ -415,7 +423,7 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 2. Validate Whop member
+             * 2. Validate Whop identity
              * ------------------------------------------------
              *
              * L'identité vient du token Whop.
@@ -430,7 +438,7 @@ export const Route =
               return Response.json(
                 {
                   error:
-                    "You must have an active Smart Point membership to download files.",
+                    "You must have a Whop account to download files.",
                 },
                 {
                   status: 401,
@@ -440,7 +448,54 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 3. Retrieve template from Supabase
+             * 3. Validate Smart Point membership
+             * ------------------------------------------------
+             *
+             * Le catalogue et les aperçus restent accessibles.
+             * Seul le téléchargement nécessite
+             * une adhésion active à Smart Point.
+             */
+
+            const apiKey =
+              process.env["WHOP_API_KEY"];
+
+            if (!apiKey) {
+              console.error(
+                "[Smart Point] WHOP_API_KEY is missing.",
+              );
+
+              return Response.json(
+                {
+                  error:
+                    "Smart Point membership verification is not configured.",
+                },
+                {
+                  status: 500,
+                },
+              );
+            }
+
+            const hasAccess =
+              await hasWhopProductAccess(
+                identity.id,
+                apiKey,
+              );
+
+            if (!hasAccess) {
+              return Response.json(
+                {
+                  error:
+                    "Vous devez être membre de Smart Point pour avoir accès au téléchargement.",
+                },
+                {
+                  status: 403,
+                },
+              );
+            }
+
+            /*
+             * ------------------------------------------------
+             * 4. Retrieve template from Supabase
              * ------------------------------------------------
              */
 
@@ -477,7 +532,7 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 4. Determine Google Drive file
+             * 5. Determine Google Drive file
              * ------------------------------------------------
              */
 
@@ -500,7 +555,7 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 5. Retrieve file from Google Drive
+             * 6. Retrieve file from Google Drive
              * ------------------------------------------------
              */
 
@@ -511,7 +566,7 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 6. Prepare filename
+             * 7. Prepare filename
              * ------------------------------------------------
              */
 
@@ -528,7 +583,7 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 7. Record download
+             * 8. Record download
              * ------------------------------------------------
              */
 
@@ -540,7 +595,7 @@ export const Route =
 
             /*
              * ------------------------------------------------
-             * 8. Return file to browser
+             * 9. Return file to browser
              * ------------------------------------------------
              *
              * L'URL Google Drive n'est jamais exposée.
