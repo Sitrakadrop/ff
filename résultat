@@ -1,27 +1,14 @@
-C:\SMART POINT\app>findstr /s /n /i /c:"server-entry" dist\*.js dist\*.mjs dist\*.cjsdir /s /b dist\server\*
-
-C:\SMART POINT\app>cd /d "C:\SMART POINT\app"
-
-C:\SMART POINT\app>
-C:\SMART POINT\app>findstr /n /c:"MAYBE_ITERATOR_SYMBOL" dist\server\index.js
-2883:   var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-2886:           maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
-7370:   var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-7373:           maybeIterable = MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL] || maybeIterable["@@iterator"];
-
-C:\SMART POINT\app>findstr /n /c:"Symbol.iterator" dist\server\index.js
-12:var SYM_ITERATOR = Symbol.iterator;
-26:     [3]: "Symbol.iterator",
-2883:   var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-7370:   var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-
-C:\SMART POINT\app>findstr /n /c:"function createServerEntry" dist\server\index.jspowershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[2860..2905]"
-FINDSTR : Impossible d'ouvrir dist\server\index.jspowershell
-FINDSTR : Impossible d'ouvrir -NoProfile
-FINDSTR : Impossible d'ouvrir -Command
-FINDSTR : Impossible d'ouvrir $p='dist/server/index.js'; $a=Get-Content $p; $a[2860..2905]
-
-C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[7345..7390]"
+C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[7335..7390]"
+* Copyright (c) Meta Platforms, Inc. and affiliates.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+var require_react_dom_server_legacy_browser_production = /* @__PURE__ */ __commonJSMin(((exports) => {
+        var React = require_react();
+        var ReactDOM = require_react_dom();
+        function formatProdErrorMessage(code) {
+                var url = "https://react.dev/errors/" + code;
                 if (1 < arguments.length) {
                         url += "?args[]=" + encodeURIComponent(arguments[1]);
                         for (var i = 2; i < arguments.length; i++) url += "&args[]=" + encodeURIComponent(arguments[i]);
@@ -69,7 +56,47 @@ C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a
                         h1 = 5 * (h1 & 65535) + ((5 * (h1 >>> 16) & 65535) << 16) & 4294967295;
                         h1 = (h1 & 65535) + 27492 + (((h1 >>> 16) + 58964 & 65535) << 16);
 
-C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[15220..15255]"
+C:\SMART POINT\app>powershell -NoProfile -Command "$p='dist/server/index.js'; $a=Get-Content $p; $a[15180..15255]"
+                return replaceSsrResponse(ssrResponse, Response.json({
+                        ...redirectOptions,
+                        isSerializedRedirect: true
+                }, { headers: responseHeaders }), "redirect response replaced");
+        }
+        return ssrResponse;
+}
+async function handleServerRoutes({ getRouter, request, url, executeRouter, context, executedRequestMiddlewares }) {
+        const router = await getRouter();
+        const pathname = executeRewriteInput(router.rewrite, url).pathname;
+        const [matchedRoutes, rawParams, foundRoute] = router.getMatchedRoutes(pathname);
+        const isExactMatch = foundRoute && rawParams["**"] === void 0;
+        const routeMiddlewares = [];
+        let terminalHandler = (ctx) => executeRouter(ctx.context, matchedRoutes);
+        let terminalNext;
+        for (const route of matchedRoutes) {
+                const serverMiddleware = route.options.server?.middleware;
+                if (serverMiddleware) {
+                        const flattened = flattenMiddlewares(serverMiddleware);
+                        for (const m of flattened) if (!executedRequestMiddlewares.has(m)) routeMiddlewares.push(m.options.server);
+                }
+        }
+        const server = foundRoute?.options.server;
+        if (server?.handlers && isExactMatch) {
+                const handlers = typeof server.handlers === "function" ? server.handlers({ createHandlers: (d) => d }) : server.handlers;
+                const requestMethod = request.method.toUpperCase();
+                const handler = requestMethod === "HEAD" ? handlers["HEAD"] ?? handlers["GET"] ?? handlers["ANY"] : handlers[requestMethod] ?? handlers["ANY"];
+                if (handler) {
+                        const mayDefer = !!foundRoute.options.component;
+                        if (typeof handler === "function") if (!mayDefer) {
+                                terminalHandler = handler;
+                                terminalNext = throwIfMayNotDefer;
+                        } else routeMiddlewares.push(handler);
+                        else {
+                                if (handler.middleware?.length) {
+                                        const handlerMiddlewares = flattenMiddlewares(handler.middleware);
+                                        for (const m of handlerMiddlewares) routeMiddlewares.push(m.options.server);
+                                }
+                                if (handler.handler) if (!mayDefer) {
+                                        terminalHandler = handler.handler;
                                         terminalNext = throwIfMayNotDefer;
                                 } else routeMiddlewares.push(handler.handler);
                         }
