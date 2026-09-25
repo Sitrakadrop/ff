@@ -1,6 +1,6 @@
 import {
   Download,
-  FileText,
+  FileImage,
   Loader2,
   RefreshCw,
 } from "lucide-react";
@@ -26,422 +26,120 @@ type PreviewDialogProps = {
   ) => void;
 };
 
-const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL || "";
-
-const SUPABASE_PUBLISHABLE_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
-
-const PREVIEW_FUNCTION = "preview-pdf";
-
 /*
- * Temps maximum d'attente pour la fonction Supabase.
- * Cela évite que "Chargement de l'aperçu..." reste
- * affiché indéfiniment.
+ * ============================================================
+ * SMART POINT V3
+ * ============================================================
+ *
+ * Le preview ne passe PLUS par :
+ *
+ *   preview-pdf
+ *   ↓
+ *   PDF
+ *   ↓
+ *   iframe
+ *   ↓
+ *   viewer navigateur / Google
+ *
+ * Le preview utilise directement :
+ *
+ *   Supabase Storage
+ *   ↓
+ *   bucket "preview"
+ *   ↓
+ *   template.preview_url
+ *   ↓
+ *   WEBP
+ *   ↓
+ *   <img>
+ *
+ * Cela permet d'avoir le même preview sur :
+ *
+ *   - ordinateur
+ *   - tablette
+ *   - Android
+ *   - iPhone
+ *
+ * sans dépendre du viewer PDF du navigateur.
+ * ============================================================
  */
-const PREVIEW_TIMEOUT = 20_000;
 
 export function PreviewDialog({
   template,
   onOpenChange,
   onDownload,
 }: PreviewDialogProps) {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  /*
+   * ==========================================================
+   * PREVIEW STATES
+   * ==========================================================
+   */
 
-  const [loading, setLoading] = useState(false);
-
-  const [iframeLoading, setIframeLoading] =
+  const [previewLoading, setPreviewLoading] =
     useState(false);
 
-  const [error, setError] = useState<string | null>(
-    null,
-  );
+  const [previewError, setPreviewError] =
+    useState<string | null>(null);
 
+  /*
+   * Permet de forcer le rechargement du WEBP
+   * lorsqu'on appuie sur "Réessayer".
+   */
   const [retryKey, setRetryKey] = useState(0);
 
+  /*
+   * ==========================================================
+   * CHARGEMENT / RESET DU PREVIEW
+   * ==========================================================
+   */
+
   useEffect(() => {
-    let cancelled = false;
-
-    let objectUrl: string | null = null;
-
-    const controller = new AbortController();
-
-    const timeoutId = window.setTimeout(() => {
-      controller.abort();
-    }, PREVIEW_TIMEOUT);
-
-    async function loadPdf() {
-      /*
-       * Aucun template sélectionné.
-       */
-      if (!template) {
-        setPdfUrl(null);
-        setError(null);
-        setLoading(false);
-        setIframeLoading(false);
-
-        window.clearTimeout(timeoutId);
-
-        return;
-      }
-
-      /*
-       * Réinitialisation avant chaque chargement.
-       */
-      setPdfUrl(null);
-      setError(null);
-      setLoading(true);
-      setIframeLoading(false);
-
-      /*
-       * Identification du template.
-       */
-      const templateId =
-        template.id ??
-        template.template_id ??
-        template.code;
-
-      if (!templateId) {
-        setLoading(false);
-
-        setError(
-          "Impossible d'identifier ce template.",
-        );
-
-        window.clearTimeout(timeoutId);
-
-        return;
-      }
-
-      /*
-       * Vérification de la configuration Supabase.
-       */
-      if (!SUPABASE_URL) {
-        setLoading(false);
-
-        setError(
-          "La configuration Supabase est manquante. Vérifie VITE_SUPABASE_URL dans .env.local.",
-        );
-
-        window.clearTimeout(timeoutId);
-
-        return;
-      }
-
-      if (!SUPABASE_PUBLISHABLE_KEY) {
-        setLoading(false);
-
-        setError(
-          "La clé publique Supabase est manquante. Vérifie VITE_SUPABASE_PUBLISHABLE_KEY dans .env.local.",
-        );
-
-        window.clearTimeout(timeoutId);
-
-        return;
-      }
-
-      try {
-        /*
-         * URL de la fonction Edge Supabase.
-         */
-        const endpoint =
-          `${SUPABASE_URL}/functions/v1/${PREVIEW_FUNCTION}` +
-          `?template_id=${encodeURIComponent(
-            String(templateId),
-          )}`;
-
-        console.info(
-          "[Smart Point] Chargement aperçu PDF:",
-          endpoint,
-        );
-
-        /*
-         * Appel de la fonction preview-pdf.
-         */
-        const response = await fetch(endpoint, {
-          method: "GET",
-
-          signal: controller.signal,
-
-          headers: {
-            Accept: "application/pdf",
-
-            apikey: SUPABASE_PUBLISHABLE_KEY,
-
-            Authorization:
-              `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-          },
-        });
-
-        /*
-         * Vérification HTTP.
-         */
-        if (!response.ok) {
-          let message =
-            `Impossible de charger l'aperçu PDF (${response.status}).`;
-
-          try {
-            const contentType =
-              response.headers.get(
-                "content-type",
-              ) || "";
-
-            /*
-             * Erreur JSON Supabase.
-             */
-            if (
-              contentType
-                .toLowerCase()
-                .includes("application/json")
-            ) {
-              const data =
-                await response.json();
-
-              if (
-                typeof data?.error === "string"
-              ) {
-                message = data.error;
-              } else if (
-                typeof data?.message === "string"
-              ) {
-                message = data.message;
-              }
-            } else {
-              /*
-               * Erreur texte.
-               */
-              const text =
-                await response.text();
-
-              if (text.trim()) {
-                message = text.trim();
-              }
-            }
-          } catch {
-            /*
-             * Garder le message HTTP par défaut.
-             */
-          }
-
-          throw new Error(message);
-        }
-
-        /*
-         * Vérification du Content-Type.
-         */
-        const contentType =
-          response.headers.get(
-            "content-type",
-          ) || "";
-
-        console.info(
-          "[Smart Point] Content-Type aperçu:",
-          contentType,
-        );
-
-        if (
-          !contentType
-            .toLowerCase()
-            .includes("application/pdf")
-        ) {
-          /*
-           * Certains serveurs peuvent retourner
-           * application/octet-stream.
-           *
-           * On vérifie alors les premiers octets
-           * du fichier avant de déclarer l'erreur.
-           */
-          const rawBlob =
-            await response.blob();
-
-          if (rawBlob.size === 0) {
-            throw new Error(
-              "Le serveur a retourné un fichier PDF vide.",
-            );
-          }
-
-          const headerBuffer =
-            await rawBlob.slice(0, 5).arrayBuffer();
-
-          const headerBytes =
-            new Uint8Array(headerBuffer);
-
-          const header = String.fromCharCode(
-            ...headerBytes,
-          );
-
-          if (header !== "%PDF-") {
-            throw new Error(
-              `Le serveur n'a pas retourné un PDF valide (Content-Type: ${contentType || "inconnu"}).`,
-            );
-          }
-
-          /*
-           * Le fichier est bien un PDF malgré
-           * le Content-Type incorrect.
-           */
-          objectUrl =
-            URL.createObjectURL(
-              new Blob([rawBlob], {
-                type: "application/pdf",
-              }),
-            );
-        } else {
-          /*
-           * Lecture normale du PDF.
-           */
-          const blob =
-            await response.blob();
-
-          if (blob.size === 0) {
-            throw new Error(
-              "Le fichier PDF retourné est vide.",
-            );
-          }
-
-          objectUrl =
-            URL.createObjectURL(
-              new Blob([blob], {
-                type: "application/pdf",
-              }),
-            );
-        }
-
-        /*
-         * Vérifier que le composant est toujours actif.
-         */
-        if (cancelled) {
-          if (objectUrl) {
-            URL.revokeObjectURL(objectUrl);
-            objectUrl = null;
-          }
-
-          return;
-        }
-
-        /*
-         * On possède maintenant une vraie URL PDF.
-         */
-        setPdfUrl(objectUrl);
-
-        setIframeLoading(true);
-
-        console.info(
-          "[Smart Point] Aperçu PDF prêt.",
-        );
-      } catch (err) {
-        if (cancelled) {
-          return;
-        }
-
-        console.error(
-          "[Smart Point] PDF preview error:",
-          err,
-        );
-
-        /*
-         * Cas particulier du timeout.
-         */
-        if (
-          err instanceof DOMException &&
-          err.name === "AbortError"
-        ) {
-          /*
-           * Si un pdf_url public existe, on essaye
-           * comme solution de secours.
-           */
-          if (
-            template.pdf_url &&
-            typeof template.pdf_url ===
-              "string"
-          ) {
-            console.warn(
-              "[Smart Point] preview-pdf timeout. Tentative avec pdf_url.",
-            );
-
-            setPdfUrl(template.pdf_url);
-
-            setIframeLoading(true);
-
-            setError(null);
-
-            return;
-          }
-
-          setError(
-            "Le serveur d'aperçu PDF ne répond pas après 20 secondes. Vérifie la fonction Supabase « preview-pdf ».",
-          );
-
-          return;
-        }
-
-        /*
-         * Si preview-pdf échoue mais qu'un
-         * pdf_url existe, tentative directe.
-         */
-        if (
-          template.pdf_url &&
-          typeof template.pdf_url ===
-            "string" &&
-          template.pdf_url.trim()
-        ) {
-          console.warn(
-            "[Smart Point] Échec preview-pdf. Tentative avec pdf_url.",
-          );
-
-          setPdfUrl(template.pdf_url);
-
-          setIframeLoading(true);
-
-          setError(null);
-
-          return;
-        }
-
-        /*
-         * Erreur finale.
-         */
-        setPdfUrl(null);
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Impossible de charger l'aperçu PDF.",
-        );
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+    if (!template) {
+      setPreviewLoading(false);
+      setPreviewError(null);
+
+      return;
     }
 
-    void loadPdf();
+    /*
+     * Nouveau template :
+     * on réinitialise complètement l'état.
+     */
+    setPreviewError(null);
 
-    return () => {
-      cancelled = true;
+    const previewUrl =
+      typeof template.preview_url === "string"
+        ? template.preview_url.trim()
+        : "";
 
-      controller.abort();
+    if (!previewUrl) {
+      setPreviewLoading(false);
 
-      window.clearTimeout(timeoutId);
+      setPreviewError(
+        "Aucun aperçu WEBP n'est associé à ce template.",
+      );
 
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
+      return;
+    }
+
+    /*
+     * L'image va maintenant être chargée
+     * par le navigateur.
+     */
+    setPreviewLoading(true);
   }, [template, retryKey]);
 
   /*
-   * Gestion de fermeture du dialogue.
+   * ==========================================================
+   * FERMETURE DU DIALOGUE
+   * ==========================================================
    */
+
   function handleOpenChange(open: boolean) {
     if (!open) {
-      setPdfUrl(null);
+      setPreviewLoading(false);
 
-      setError(null);
-
-      setLoading(false);
-
-      setIframeLoading(false);
+      setPreviewError(null);
 
       setRetryKey(0);
     }
@@ -450,50 +148,113 @@ export function PreviewDialog({
   }
 
   /*
-   * Relancer manuellement l'aperçu.
+   * ==========================================================
+   * RETRY
+   * ==========================================================
    */
+
   function handleRetry() {
-    setPdfUrl(null);
+    setPreviewError(null);
 
-    setError(null);
-
-    setLoading(true);
-
-    setIframeLoading(false);
+    setPreviewLoading(true);
 
     setRetryKey((value) => value + 1);
   }
 
   /*
-   * Aucun template.
+   * ==========================================================
+   * AUCUN TEMPLATE
+   * ==========================================================
    */
+
   if (!template) {
     return null;
   }
 
   /*
-   * Nom du template.
+   * ==========================================================
+   * TEMPLATE INFORMATION
+   * ==========================================================
    */
+
   const templateName =
     template.name ||
     "Template Smart Point";
 
-  /*
-   * Code du template.
-   */
   const templateCode =
     template.code ??
     template.template_id ??
     "";
 
   /*
-   * Disponibilité des fichiers.
+   * ==========================================================
+   * PREVIEW URL
+   * ==========================================================
+   *
+   * catalog.ts construit actuellement :
+   *
+   * /storage/v1/object/public/preview/{template_id}.webp
+   *
+   * Exemple :
+   *
+   * 020BC
+   *   ↓
+   * preview/020BC.webp
+   *
+   * IMPORTANT :
+   * On utilise directement preview_url.
+   * On ne reconstruit PAS l'URL à partir du nom.
    */
+
+  const previewUrl =
+    typeof template.preview_url === "string"
+      ? template.preview_url.trim()
+      : "";
+
+  const hasPreview =
+    Boolean(previewUrl);
+
+  /*
+   * ==========================================================
+   * DOWNLOAD AVAILABILITY
+   * ==========================================================
+   */
+
   const hasPdf =
-    Boolean(template.pdf_url);
+    Boolean(
+      template.pdf_url &&
+        template.pdf_url.trim(),
+    );
 
   const hasPptx =
-    Boolean(template.pptx_url);
+    Boolean(
+      template.pptx_url &&
+        template.pptx_url.trim(),
+    );
+
+  /*
+   * ==========================================================
+   * RETRY CACHE BUSTER
+   * ==========================================================
+   *
+   * Cela permet de forcer le navigateur à refaire
+   * la requête lorsqu'un utilisateur appuie sur
+   * "Réessayer".
+   */
+
+  const previewSrc = hasPreview
+    ? `${previewUrl}${
+        previewUrl.includes("?")
+          ? "&"
+          : "?"
+      }preview_retry=${retryKey}`
+    : "";
+
+  /*
+   * ==========================================================
+   * RENDER
+   * ==========================================================
+   */
 
   return (
     <Dialog
@@ -503,8 +264,9 @@ export function PreviewDialog({
       <DialogContent
         className="
           flex
-          h-[95vh]
-          w-[96vw]
+          h-[94dvh]
+          max-h-[94dvh]
+          w-[calc(100%-1rem)]
           max-w-7xl
           flex-col
           overflow-hidden
@@ -513,11 +275,16 @@ export function PreviewDialog({
           border-border
           bg-background
           p-0
+
+          sm:h-[95vh]
+          sm:max-h-[95vh]
+          sm:w-[96vw]
         "
       >
-        {/* =====================================================
+        {/* ====================================================
             HEADER
-        ====================================================== */}
+        ===================================================== */}
+
         <DialogHeader
           className="
             flex
@@ -528,9 +295,13 @@ export function PreviewDialog({
             gap-4
             border-b
             border-border
-            px-5
-            py-4
-            pr-14
+            px-4
+            py-3
+            pr-12
+
+            sm:px-5
+            sm:py-4
+            sm:pr-14
           "
         >
           <div className="min-w-0">
@@ -539,6 +310,7 @@ export function PreviewDialog({
                 truncate
                 text-base
                 font-semibold
+
                 sm:text-lg
               "
             >
@@ -554,28 +326,30 @@ export function PreviewDialog({
               "
             >
               {templateCode
-                ? `Template ${templateCode}`
+                ? `Modèle ${templateCode}`
                 : "Aperçu du template"}
             </DialogDescription>
           </div>
         </DialogHeader>
 
-        {/* =====================================================
-            ZONE PREVIEW
-        ====================================================== */}
+        {/* ====================================================
+            PREVIEW AREA
+        ===================================================== */}
+
         <div
           className="
             relative
             min-h-0
             flex-1
-            overflow-hidden
+            overflow-auto
             bg-muted/30
           "
         >
-          {/* ---------------------------------------------------
-              CHARGEMENT INITIAL
-          ---------------------------------------------------- */}
-          {loading && (
+          {/* ==================================================
+              LOADING
+          =================================================== */}
+
+          {previewLoading && (
             <div
               className="
                 absolute
@@ -627,65 +401,27 @@ export function PreviewDialog({
                     text-muted-foreground
                   "
                 >
-                  Préparation du PDF
+                  Préparation de l'image
                 </p>
               </div>
             </div>
           )}
 
-          {/* ---------------------------------------------------
-              CHARGEMENT DE L'IFRAME
-          ---------------------------------------------------- */}
-          {iframeLoading &&
-            !loading &&
-            !error &&
-            pdfUrl && (
-              <div
-                className="
-                  absolute
-                  inset-0
-                  z-10
-                  flex
-                  flex-col
-                  items-center
-                  justify-center
-                  gap-3
-                  bg-background/90
-                "
-              >
-                <Loader2
-                  className="
-                    h-7
-                    w-7
-                    animate-spin
-                    text-primary
-                  "
-                />
+          {/* ==================================================
+              PREVIEW ERROR
+          =================================================== */}
 
-                <p
-                  className="
-                    text-sm
-                    text-muted-foreground
-                  "
-                >
-                  Affichage du PDF...
-                </p>
-              </div>
-            )}
-
-          {/* ---------------------------------------------------
-              ERREUR
-          ---------------------------------------------------- */}
-          {error && !loading && (
+          {previewError && !previewLoading && (
             <div
               className="
                 flex
-                h-full
+                min-h-full
                 flex-col
                 items-center
                 justify-center
                 gap-5
                 px-6
+                py-10
                 text-center
               "
             >
@@ -694,6 +430,7 @@ export function PreviewDialog({
                   flex
                   h-16
                   w-16
+                  shrink-0
                   items-center
                   justify-center
                   rounded-full
@@ -701,7 +438,7 @@ export function PreviewDialog({
                   text-destructive
                 "
               >
-                <FileText
+                <FileImage
                   className="
                     h-8
                     w-8
@@ -709,7 +446,11 @@ export function PreviewDialog({
                 />
               </div>
 
-              <div className="max-w-lg">
+              <div
+                className="
+                  max-w-lg
+                "
+              >
                 <h3
                   className="
                     text-base
@@ -727,23 +468,54 @@ export function PreviewDialog({
                     text-muted-foreground
                   "
                 >
-                  {error}
+                  {previewError}
                 </p>
               </div>
 
-              {!hasPdf && (
-                <p
+              {/* ----------------------------------------------
+                  INFORMATION TECHNIQUE
+              ----------------------------------------------- */}
+
+              {previewUrl && (
+                <div
                   className="
-                    max-w-md
-                    text-xs
-                    text-muted-foreground
+                    max-w-xl
+                    rounded-lg
+                    border
+                    border-border
+                    bg-muted/40
+                    px-4
+                    py-3
+                    text-left
                   "
                 >
-                  Aucun fichier PDF n'est
-                  actuellement associé à ce
-                  template.
-                </p>
+                  <p
+                    className="
+                      break-all
+                      text-xs
+                      leading-5
+                      text-muted-foreground
+                    "
+                  >
+                    L'aperçu attendu est :
+
+                    <br />
+
+                    <span
+                      className="
+                        font-mono
+                        text-foreground
+                      "
+                    >
+                      {previewUrl}
+                    </span>
+                  </p>
+                </div>
               )}
+
+              {/* ----------------------------------------------
+                  RETRY
+              ----------------------------------------------- */}
 
               <Button
                 type="button"
@@ -760,40 +532,60 @@ export function PreviewDialog({
             </div>
           )}
 
-          {/* ---------------------------------------------------
-              PDF
-          ---------------------------------------------------- */}
-          {pdfUrl &&
-            !loading &&
-            !error && (
-              <iframe
-                src={pdfUrl}
-                title={`Aperçu PDF de ${templateName}`}
+          {/* ==================================================
+              WEBP PREVIEW
+          =================================================== */}
+
+          {hasPreview &&
+            !previewError && (
+              <div
                 className="
-                  h-full
+                  flex
+                  min-h-full
                   w-full
-                  border-0
-                  bg-white
+                  items-center
+                  justify-center
+                  p-2
+
+                  sm:p-4
+                  md:p-6
                 "
-                onLoad={() => {
-                  setIframeLoading(false);
-                }}
-                onError={() => {
-                  setIframeLoading(false);
+              >
+                <img
+                  key={previewSrc}
+                  src={previewSrc}
+                  alt={`Aperçu de ${templateName}`}
+                  draggable={false}
+                  className="
+                    block
+                    max-h-full
+                    max-w-full
+                    select-none
+                    rounded-lg
+                    object-contain
+                    shadow-sm
+                  "
+                  onLoad={() => {
+                    setPreviewLoading(false);
 
-                  setPdfUrl(null);
+                    setPreviewError(null);
+                  }}
+                  onError={() => {
+                    setPreviewLoading(false);
 
-                  setError(
-                    "Le navigateur n'a pas réussi à afficher ce fichier PDF.",
-                  );
-                }}
-              />
+                    setPreviewError(
+                      "Le fichier WEBP d'aperçu n'a pas pu être chargé. Vérifie que le fichier existe dans le bucket Supabase « preview » et que son nom correspond exactement au template_id.",
+                    );
+                  }}
+                />
+              </div>
             )}
         </div>
 
-        {/* =====================================================
+        {/* ====================================================
             FOOTER
-        ====================================================== */}
+        ===================================================== */}
+
         <div
           className="
             flex
@@ -803,17 +595,25 @@ export function PreviewDialog({
             border-t
             border-border
             bg-background
-            px-5
-            py-4
+            px-4
+            py-3
+
             sm:flex-row
             sm:items-center
             sm:justify-between
+            sm:px-5
+            sm:py-4
           "
         >
-          {/* ---------------------------------------------------
-              INFORMATIONS TEMPLATE
-          ---------------------------------------------------- */}
-          <div className="min-w-0">
+          {/* ==================================================
+              TEMPLATE INFORMATION
+          =================================================== */}
+
+          <div
+            className="
+              min-w-0
+            "
+          >
             <p
               className="
                 truncate
@@ -830,30 +630,37 @@ export function PreviewDialog({
                 text-muted-foreground
               "
             >
-              Choisissez le format à
-              télécharger
+              Choisissez le format à télécharger
             </p>
           </div>
 
-          {/* ---------------------------------------------------
-              BOUTONS DOWNLOAD
-          ---------------------------------------------------- */}
+          {/* ==================================================
+              DOWNLOAD BUTTONS
+          =================================================== */}
+
           <div
             className="
-              flex
+              grid
               w-full
+              grid-cols-2
               gap-2
+
+              sm:flex
               sm:w-auto
             "
           >
-            {/* PDF */}
+            {/* =================================================
+                PDF
+            ================================================== */}
+
             <Button
               type="button"
               variant="outline"
               className="
-                flex-1
+                w-full
                 gap-2
-                sm:flex-none
+
+                sm:w-auto
               "
               disabled={
                 !hasPdf ||
@@ -867,19 +674,26 @@ export function PreviewDialog({
               }
             >
               <Download
-                className="h-4 w-4"
+                className="
+                  h-4
+                  w-4
+                "
               />
 
               PDF
             </Button>
 
-            {/* PPTX */}
+            {/* =================================================
+                PPTX
+            ================================================== */}
+
             <Button
               type="button"
               className="
-                flex-1
+                w-full
                 gap-2
-                sm:flex-none
+
+                sm:w-auto
               "
               disabled={
                 !hasPptx ||
@@ -893,7 +707,10 @@ export function PreviewDialog({
               }
             >
               <Download
-                className="h-4 w-4"
+                className="
+                  h-4
+                  w-4
+                "
               />
 
               PPTX
