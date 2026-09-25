@@ -17,7 +17,6 @@ export type Template = {
   name: string;
   category_id: string;
   category_name?: string | null;
-
   drive_pdf_id: string | null;
   drive_pptx_id: string | null;
   preview_file_id: string | null;
@@ -36,7 +35,6 @@ export type Template = {
   pptx_url: string | null;
 
   is_active: boolean;
-
   created_at?: string | null;
   updated_at?: string | null;
 
@@ -72,10 +70,12 @@ export type DownloadHistoryItem = {
    CONFIGURATION
    ========================================================= */
 
-const SUPABASE_URL =
-  import.meta.env.VITE_SUPABASE_URL || "";
+const SUPABASE_URL = (
+  import.meta.env["VITE_SUPABASE_URL"] || ""
+).trim();
 
 const PREVIEW_BUCKET = "preview";
+const PREVIEW_EXTENSION = ".webp";
 
 /* =========================================================
    CATEGORY TONES
@@ -109,32 +109,67 @@ export function mapCategory(row: any): Category {
 }
 
 /* =========================================================
-   SUPABASE STORAGE PREVIEW
+   SUPABASE STORAGE PREVIEW — V3
    ========================================================= */
 
 /**
- * WEBP preview:
+ * V3 PREVIEW SYSTEM
  *
- * Supabase Storage
- * bucket: preview
+ * Les previews des templates sont maintenant servies
+ * directement depuis Supabase Storage.
  *
- * Example:
- * https://PROJECT.supabase.co/storage/v1/object/public/preview/001SI.webp
+ * Bucket:
+ *   preview
+ *
+ * Nom du fichier:
+ *   <template_id>.webp
+ *
+ * Exemple:
+ *   template_id = 020BC
+ *
+ * URL générée:
+ *   https://PROJECT.supabase.co/storage/v1/object/public/preview/020BC.webp
+ *
+ * IMPORTANT:
+ * Le nom affiché du template n'est PAS utilisé.
+ *
+ * Exemple:
+ *   name = "020 av. J.-C."
+ *   template_id = "020BC"
+ *
+ * Le fichier attendu est:
+ *   preview/020BC.webp
  */
+
+function normalizeTemplateId(
+  templateId: string,
+): string {
+  return String(templateId ?? "")
+    .trim()
+    .replace(/^\/+|\/+$/g, "");
+}
+
 export function getSupabasePreviewUrl(
   templateId: string,
 ): string | null {
-  if (!SUPABASE_URL || !templateId) {
+  if (!SUPABASE_URL) {
     return null;
   }
 
-  const cleanId = templateId
-    .trim()
-    .replace(/^\/+|\/+$/g, "");
+  const cleanId =
+    normalizeTemplateId(templateId);
 
-  return `${SUPABASE_URL}/storage/v1/object/public/${PREVIEW_BUCKET}/${encodeURIComponent(
-    cleanId,
-  )}.webp`;
+  if (!cleanId) {
+    return null;
+  }
+
+  const baseUrl =
+    SUPABASE_URL.replace(/\/+$/g, "");
+
+  const encodedId =
+    encodeURIComponent(cleanId);
+
+  return `${baseUrl}/storage/v1/object/public/${PREVIEW_BUCKET}/${encodedId}${PREVIEW_EXTENSION}`;
 }
 
 /* =========================================================
@@ -154,7 +189,9 @@ export function getSupabasePreviewUrl(
 export function getDrivePdfUrl(
   fileId?: string | null,
 ): string | null {
-  if (!fileId) return null;
+  if (!fileId) {
+    return null;
+  }
 
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(
     fileId,
@@ -164,7 +201,9 @@ export function getDrivePdfUrl(
 export function getDrivePptxUrl(
   fileId?: string | null,
 ): string | null {
-  if (!fileId) return null;
+  if (!fileId) {
+    return null;
+  }
 
   return `https://drive.google.com/uc?export=download&id=${encodeURIComponent(
     fileId,
@@ -174,12 +213,20 @@ export function getDrivePptxUrl(
 /**
  * Compatibility helper for old parts of the app.
  *
- * Card previews now use Supabase Storage.
+ * IMPORTANT:
+ * Les cartes V3 et le système de preview V3
+ * n'utilisent plus Google Drive.
+ *
+ * Cette fonction est conservée uniquement pour
+ * compatibilité avec d'anciennes parties de l'UI.
  */
+
 export function getDrivePreviewUrl(
   fileId?: string | null,
 ): string | null {
-  if (!fileId) return null;
+  if (!fileId) {
+    return null;
+  }
 
   return `https://drive.google.com/thumbnail?id=${encodeURIComponent(
     fileId,
@@ -187,7 +234,7 @@ export function getDrivePreviewUrl(
 }
 
 /* =========================================================
-   TEMPLATE MAPPING
+   TEMPLATE MAPPING — V3
    ========================================================= */
 
 export function mapTemplate(
@@ -198,7 +245,7 @@ export function mapTemplate(
     row?.template_id ??
       row?.id ??
       "",
-  );
+  ).trim();
 
   const name = String(
     row?.name ??
@@ -218,6 +265,27 @@ export function mapTemplate(
 
   const previewFileId =
     row?.preview_file_id ?? null;
+
+  /*
+   * V3:
+   *
+   * Le preview est TOUJOURS basé sur
+   * template_id + .webp.
+   *
+   * Exemple:
+   *
+   * template_id = 020BC
+   * preview_url =
+   * /storage/v1/object/public/preview/020BC.webp
+   *
+   * Le nom "020 av. J.-C." n'est jamais utilisé
+   * pour construire le chemin du fichier.
+   */
+
+  const previewUrl =
+    getSupabasePreviewUrl(
+      templateId,
+    );
 
   return {
     template_id: templateId,
@@ -241,20 +309,16 @@ export function mapTemplate(
       previewFileId,
 
     /*
-     * WEBP depuis Supabase Storage
+     * V3 WEBP PREVIEW
      */
     preview_url:
-      getSupabasePreviewUrl(
-        templateId,
-      ),
+      previewUrl,
 
     /*
-     * Ces deux valeurs ne doivent plus être
-     * utilisées pour envoyer directement
-     * l'utilisateur vers Google Drive.
+     * Compatibilité PDF.
      *
-     * On les garde pour compatibilité avec
-     * le composant Template.
+     * Le téléchargement final ne doit pas
+     * dépendre directement de ces URLs.
      */
     pdf_url:
       drivePdfId
@@ -263,6 +327,9 @@ export function mapTemplate(
           )
         : null,
 
+    /*
+     * Compatibilité PPTX.
+     */
     pptx_url:
       drivePptxId
         ? getDrivePptxUrl(
@@ -310,7 +377,10 @@ export function categoriesQuery() {
 
     queryFn:
       async (): Promise<Category[]> => {
-        const { data, error } =
+        const {
+          data,
+          error,
+        } =
           await supabase
             .from("categories")
             .select("*")
@@ -350,7 +420,10 @@ export function categoryCountsQuery() {
       async (): Promise<
         Record<string, number>
       > => {
-        const { data, error } =
+        const {
+          data,
+          error,
+        } =
           await supabase
             .from("templates")
             .select(
@@ -592,7 +665,9 @@ const LOCAL_FAVORITES_STORAGE_KEY =
   "smart-point-test-favorites";
 
 function isLocalhostFavoriteTest(): boolean {
-  if (typeof window === "undefined") {
+  if (
+    typeof window === "undefined"
+  ) {
     return false;
   }
 
@@ -780,6 +855,7 @@ export function favoritesQuery(
            * On conserve l'ordre des favoris
            * stocké dans sessionStorage.
            */
+
           return favoriteIds
             .map(
               (
@@ -855,13 +931,8 @@ export function favoritesQuery(
         ).map(
           (
             row: any,
-          ) => ({
-            template_id:
-              String(
-                row.template_id,
-              ),
-
-            template:
+          ) => {
+            const template =
               row.templates
                 ? mapTemplate(
                     row.templates,
@@ -871,8 +942,19 @@ export function favoritesQuery(
                       ?.name ??
                       null,
                   )
-                : undefined,
-          }),
+                : undefined;
+
+            return {
+              template_id:
+                String(
+                  row.template_id,
+                ),
+
+              ...(template
+                ? { template }
+                : {}),
+            };
+          },
         );
       },
   };
@@ -1106,6 +1188,7 @@ export async function toggleFavorite(
  * Le serveur devra idéalement fournir l'historique
  * après vérification Whop.
  */
+
 export function downloadsQuery(
   whopUserId: string,
 ) {
@@ -1172,27 +1255,8 @@ export function downloadsQuery(
         ).map(
           (
             row: any,
-          ) => ({
-            id:
-              String(
-                row.id,
-              ),
-
-            template_id:
-              String(
-                row.template_id,
-              ),
-
-            format:
-              row.file_type ===
-              "pptx"
-                ? "pptx"
-                : "pdf",
-
-            created_at:
-              row.downloaded_at,
-
-            template:
+          ) => {
+            const template =
               row.templates
                 ? mapTemplate(
                     row.templates,
@@ -1202,8 +1266,33 @@ export function downloadsQuery(
                       ?.name ??
                       null,
                   )
-                : undefined,
-          }),
+                : undefined;
+
+            return {
+              id:
+                String(
+                  row.id,
+                ),
+
+              template_id:
+                String(
+                  row.template_id,
+                ),
+
+              format:
+                row.file_type ===
+                "pptx"
+                  ? "pptx"
+                  : "pdf",
+
+              created_at:
+                row.downloaded_at,
+
+              ...(template
+                ? { template }
+                : {}),
+            };
+          },
         );
       },
   };
@@ -1230,6 +1319,7 @@ export function downloadsQuery(
  * 5. enregistre le téléchargement ;
  * 6. retourne le fichier au navigateur.
  */
+
 export async function recordDownload(
   whopUserId: string,
   templateId: string,
