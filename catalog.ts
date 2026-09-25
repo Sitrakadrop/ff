@@ -12,6 +12,16 @@ export type Category = {
   color?: string | null;
 };
 
+export type PreviewPart = {
+  id?: string;
+  part_number: number;
+  file_id: string | null;
+  file_name: string;
+  storage_path: string | null;
+  page_start?: number | null;
+  page_end?: number | null;
+};
+
 export type Template = {
   template_id: string;
   name: string;
@@ -20,6 +30,17 @@ export type Template = {
   drive_pdf_id: string | null;
   drive_pptx_id: string | null;
   preview_file_id: string | null;
+
+  /*
+   * Multipart preview V3
+   *
+   * Exemple:
+   * 047BC-01.webp
+   * 047BC-02.webp
+   * 047BC-03.webp
+   * ...
+   */
+  preview_parts?: PreviewPart[];
 
   preview_url: string | null;
 
@@ -115,8 +136,8 @@ export function mapCategory(row: any): Category {
 /**
  * V3 PREVIEW SYSTEM
  *
- * Les previews des templates sont maintenant servies
- * directement depuis Supabase Storage.
+ * Les previews principales des templates sont servies
+ * depuis Supabase Storage.
  *
  * Bucket:
  *   preview
@@ -124,21 +145,8 @@ export function mapCategory(row: any): Category {
  * Nom du fichier:
  *   <template_id>.webp
  *
- * Exemple:
- *   template_id = 020BC
- *
- * URL générée:
- *   https://PROJECT.supabase.co/storage/v1/object/public/preview/020BC.webp
- *
  * IMPORTANT:
  * Le nom affiché du template n'est PAS utilisé.
- *
- * Exemple:
- *   name = "020 av. J.-C."
- *   template_id = "020BC"
- *
- * Le fichier attendu est:
- *   preview/020BC.webp
  */
 
 function normalizeTemplateId(
@@ -266,20 +274,73 @@ export function mapTemplate(
   const previewFileId =
     row?.preview_file_id ?? null;
 
+  /* =======================================================
+     MULTIPART PREVIEW
+     ======================================================= */
+
+  const previewParts: PreviewPart[] =
+    Array.isArray(row?.preview_parts)
+      ? row.preview_parts
+          .filter(
+            (part: any) =>
+              part &&
+              typeof part.file_id ===
+                "string" &&
+              part.file_id.trim()
+                .length > 0,
+          )
+          .map(
+            (
+              part: any,
+            ): PreviewPart => ({
+              id:
+                typeof part.id ===
+                "string"
+                  ? part.id
+                  : undefined,
+
+              part_number:
+                Number(
+                  part.part_number,
+                ) || 0,
+
+              file_id:
+                part.file_id,
+
+              file_name:
+                String(
+                  part.file_name ??
+                    "",
+                ),
+
+              storage_path:
+                part.storage_path ??
+                null,
+
+              page_start:
+                part.page_start ??
+                null,
+
+              page_end:
+                part.page_end ??
+                null,
+            }),
+          )
+          .sort(
+            (a, b) =>
+              a.part_number -
+              b.part_number,
+          )
+      : [];
+
   /*
    * V3:
    *
-   * Le preview est TOUJOURS basé sur
+   * Le preview legacy est toujours basé sur
    * template_id + .webp.
    *
-   * Exemple:
-   *
-   * template_id = 020BC
-   * preview_url =
-   * /storage/v1/object/public/preview/020BC.webp
-   *
-   * Le nom "020 av. J.-C." n'est jamais utilisé
-   * pour construire le chemin du fichier.
+   * Le système multipart utilise maintenant
+   * preview_parts.
    */
 
   const previewUrl =
@@ -288,11 +349,13 @@ export function mapTemplate(
     );
 
   return {
-    template_id: templateId,
+    template_id:
+      templateId,
 
     name,
 
-    category_id: categoryId,
+    category_id:
+      categoryId,
 
     category_name:
       categoryName ??
@@ -309,7 +372,13 @@ export function mapTemplate(
       previewFileId,
 
     /*
-     * V3 WEBP PREVIEW
+     * MULTIPART PREVIEW V3
+     */
+    preview_parts:
+      previewParts,
+
+    /*
+     * V3 WEBP PREVIEW LEGACY
      */
     preview_url:
       previewUrl,
@@ -510,6 +579,15 @@ export function templatesQuery(
                 *,
                 categories (
                   name
+                ),
+                preview_parts:template_preview_parts (
+                  id,
+                  part_number,
+                  file_id,
+                  file_name,
+                  storage_path,
+                  page_start,
+                  page_end
                 )
               `,
             )
@@ -805,6 +883,15 @@ export function favoritesQuery(
                   *,
                   categories (
                     name
+                  ),
+                  preview_parts:template_preview_parts (
+                    id,
+                    part_number,
+                    file_id,
+                    file_name,
+                    storage_path,
+                    page_start,
+                    page_end
                   )
                 `,
               )
@@ -908,6 +995,15 @@ export function favoritesQuery(
                   *,
                   categories (
                     name
+                  ),
+                  preview_parts:template_preview_parts (
+                    id,
+                    part_number,
+                    file_id,
+                    file_name,
+                    storage_path,
+                    page_start,
+                    page_end
                   )
                 )
               `,
@@ -1225,6 +1321,15 @@ export function downloadsQuery(
                   *,
                   categories (
                     name
+                  ),
+                  preview_parts:template_preview_parts (
+                    id,
+                    part_number,
+                    file_id,
+                    file_name,
+                    storage_path,
+                    page_start,
+                    page_end
                   )
                 )
               `,
